@@ -17,11 +17,11 @@ clean-targets:
 models:
   cavida_dbt:
     staging:
-      +schema: STAGING
+      +schema: SILVER
       +materialized: view
     intermediate:
-      +schema: STAGING
+      +schema: SILVER
       +materialized: view
     marts:
-      +schema: PROD
+      +schema: GOLD
       +materialized: table

@@ -7,7 +7,7 @@ with c1:
     if st.button("🔄 Actualizar",key="r11"): st.rerun()
 with c2:
     if st.button("🔴 Reset",key="rs11"): st.warning("Apenas admin")
-df=session.sql("""SELECT file_name AS "Processo",file_type AS "Descrição",CASE WHEN status='Disponível' THEN 'Concluído' ELSE status END AS "Status" FROM CAVIDA_DEMO.RAW.SLV2_RISK_AGILITY_FILES WHERE reference_date='2025-06-30' AND file_type='Output' LIMIT 1""").to_pandas()
+df=session.sql("""SELECT file_name AS "Processo",file_type AS "Descrição",CASE WHEN status='Disponível' THEN 'Concluído' ELSE status END AS "Status" FROM CAVIDA_DEMO.BRONZE.SLV2_RISK_AGILITY_FILES WHERE reference_date='2025-06-30' AND file_type='Output' LIMIT 1""").to_pandas()
 if len(df)>0:
     def cs(v):
         if v=="Concluído": return "background-color:#C8E6C9;color:#1B5E20"

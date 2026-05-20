@@ -11,10 +11,10 @@ with c2:
 with c3:
     if st.button("🔴 Reset",key="rs12"): st.warning("Apenas admin")
 st.markdown("**PRÉ-REQUISITOS**")
-pre=session.sql("SELECT DISTINCT pre_requisite AS \"Pré-Requisito\",pre_req_status AS \"Estado\" FROM CAVIDA_DEMO.RAW.SLV2_TAGETIK_PROCESSES WHERE reference_date='2025-06-30' AND pre_requisite IS NOT NULL").to_pandas()
+pre=session.sql("SELECT DISTINCT pre_requisite AS \"Pré-Requisito\",pre_req_status AS \"Estado\" FROM CAVIDA_DEMO.BRONZE.SLV2_TAGETIK_PROCESSES WHERE reference_date='2025-06-30' AND pre_requisite IS NOT NULL").to_pandas()
 if len(pre)>0: st.dataframe(pre,use_container_width=True,hide_index=True)
 st.divider()
-df=session.sql("""SELECT process_name AS "Processo",description AS "Descrição",status AS "Status",started_at AS "Início",completed_at AS "Fim" FROM CAVIDA_DEMO.RAW.SLV2_TAGETIK_PROCESSES WHERE reference_date='2025-06-30' ORDER BY process_id""").to_pandas()
+df=session.sql("""SELECT process_name AS "Processo",description AS "Descrição",status AS "Status",started_at AS "Início",completed_at AS "Fim" FROM CAVIDA_DEMO.BRONZE.SLV2_TAGETIK_PROCESSES WHERE reference_date='2025-06-30' ORDER BY process_id""").to_pandas()
 def cs(v):
     if v=="Concluído": return "background-color:#C8E6C9;color:#1B5E20"
     return ""

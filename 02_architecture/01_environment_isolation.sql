@@ -48,11 +48,11 @@ ORDER BY TABLE_SCHEMA, TABLE_NAME;
 
 -- Run same query on DEV warehouse (XSMALL)
 USE WAREHOUSE CAVIDA_DEV_WH;
-SELECT COUNT(*), SUM(sum_total) AS total_portfolio FROM CAVIDA_DEMO.RAW.SLV2_INVESTMENT_PORTFOLIO;
+SELECT COUNT(*), SUM(sum_total) AS total_portfolio FROM CAVIDA_DEMO.BRONZE.SLV2_INVESTMENT_PORTFOLIO;
 
 -- Run same query on PROD warehouse (SMALL)
 USE WAREHOUSE CAVIDA_PROD_WH;
-SELECT COUNT(*), SUM(sum_total) AS total_portfolio FROM CAVIDA_DEMO.RAW.SLV2_INVESTMENT_PORTFOLIO;
+SELECT COUNT(*), SUM(sum_total) AS total_portfolio FROM CAVIDA_DEMO.BRONZE.SLV2_INVESTMENT_PORTFOLIO;
 
 -- KEY POINT: Same data, different compute — no data movement
 -- Unlike SAS where compute and storage are tightly coupled

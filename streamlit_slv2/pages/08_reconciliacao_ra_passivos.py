@@ -8,7 +8,7 @@ with c1:
     if st.button("📊 Exportar Para Excel",key="ep8"): st.success("Exportado")
 with c2:
     if st.button("📋 Exportar Tabela",key="et8"): st.success("Exportado")
-df=session.sql("""SELECT reference_date AS "Data",risk_agility_input_file AS "Ficheiro RA",math_provisions AS "Math. Provisions",insured_capital AS "Capital Segurado",record_count AS "Registos" FROM CAVIDA_DEMO.RAW.SLV2_RISK_AGILITY_INPUTS_LIABILITIES WHERE reference_date='2025-06-30' ORDER BY 2""").to_pandas()
+df=session.sql("""SELECT reference_date AS "Data",risk_agility_input_file AS "Ficheiro RA",math_provisions AS "Math. Provisions",insured_capital AS "Capital Segurado",record_count AS "Registos" FROM CAVIDA_DEMO.BRONZE.SLV2_RISK_AGILITY_INPUTS_LIABILITIES WHERE reference_date='2025-06-30' ORDER BY 2""").to_pandas()
 st.dataframe(df,use_container_width=True,hide_index=True)
 for ft in ['CAPIT','FIXED','TAE']:
     with st.expander(f"📁 REGISTOS VAZIOS — {ft}"):

@@ -15,7 +15,7 @@ SHOW TAGS IN SCHEMA CAVIDA_DEMO.REGULATORY;
 
 -- Data Domain tags applied to tables
 SELECT * FROM TABLE(INFORMATION_SCHEMA.TAG_REFERENCES_ALL_COLUMNS(
-  'CAVIDA_DEMO.RAW.SLV2_INVESTMENT_PORTFOLIO', 'TABLE'));
+  'CAVIDA_DEMO.BRONZE.SLV2_INVESTMENT_PORTFOLIO', 'TABLE'));
 
 -- ============================================================
 -- DEMO 2: Semantic View as Business Glossary

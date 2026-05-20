@@ -13,4 +13,4 @@ SELECT
     accrued_interest,
     sum_total,
     loaded_at
-FROM {{ source('raw', 'SLV2_INVESTMENT_PORTFOLIO') }}
+FROM {{ source('bronze', 'SLV2_INVESTMENT_PORTFOLIO') }}

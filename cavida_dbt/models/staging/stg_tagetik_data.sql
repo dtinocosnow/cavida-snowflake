@@ -8,4 +8,4 @@ SELECT
     completed_at,
     pre_requisite,
     pre_req_status
-FROM {{ source('raw', 'SLV2_TAGETIK_PROCESSES') }}
+FROM {{ source('bronze', 'SLV2_TAGETIK_PROCESSES') }}

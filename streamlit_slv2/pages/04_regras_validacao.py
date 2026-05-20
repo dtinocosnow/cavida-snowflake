@@ -8,7 +8,7 @@ with t1:
         import time; time.sleep(2)
         st.success("✅ 10 regras executadas"); st.rerun()
 with t2:
-    df=session.sql("""SELECT rule_code AS "Código",rule_description AS "Descrição",rule_category AS "Categoria",severity AS "Severidade",records_evaluated AS "Avaliados",records_failed AS "Falhados",status AS "Status" FROM CAVIDA_DEMO.RAW.SLV2_VALIDATION_RULES WHERE reference_date='2025-06-30' ORDER BY rule_code""").to_pandas()
+    df=session.sql("""SELECT rule_code AS "Código",rule_description AS "Descrição",rule_category AS "Categoria",severity AS "Severidade",records_evaluated AS "Avaliados",records_failed AS "Falhados",status AS "Status" FROM CAVIDA_DEMO.BRONZE.SLV2_VALIDATION_RULES WHERE reference_date='2025-06-30' ORDER BY rule_code""").to_pandas()
     def cs(v):
         if v=="Aprovado": return "background-color:#C8E6C9;color:#1B5E20"
         elif v=="Falhou": return "background-color:#FFCDD2;color:#B71C1C"

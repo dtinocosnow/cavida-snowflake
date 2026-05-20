@@ -5,4 +5,4 @@ SELECT
     math_provisions,
     insured_capital,
     record_count
-FROM {{ source('raw', 'SLV2_RISK_AGILITY_INPUTS_LIABILITIES') }}
+FROM {{ source('bronze', 'SLV2_RISK_AGILITY_INPUTS_LIABILITIES') }}
