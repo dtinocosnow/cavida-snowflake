@@ -7,209 +7,250 @@
 
 1. Abrir Snowsight: https://app.snowflake.com/sfseeurope/dtinoco_aws/
 2. Ter abertos em tabs:
-   - **Notebook**: `CAVIDA_DEMO.REGULATORY.CAVIDA_DEMO_V2_EXECUCAO` ← PRINCIPAL (tudo aqui!)
+   - **Notebook**: `CAVIDA_DEMO.REGULATORY.CAVIDA_DEMO_V2_EXECUCAO` ← PRINCIPAL
    - **Streamlit App**: `CAVIDA_DEMO.REGULATORY.SLV2_WORKFLOW`
    - **Snowflake Intelligence**: Agent `CA Vida - Solvency II Intelligence`
-3. Verificar que warehouses estão activos: `SHOW WAREHOUSES LIKE 'CAVIDA%';`
-
-> **NOTA**: O notebook `CAVIDA_DEMO_V2_EXECUCAO` contém TODOS os scripts SQL, comentários, tabelas comparativas e mensagens para o presenter. Basta executar célula a célula durante a demo. Os scripts SQL avulsos (02_architecture/, 05_security/, etc.) já não são necessários.
+   - **GitHub**: https://github.com/dtinocosnow/cavida-snowflake
+3. Verificar warehouses: `SHOW WAREHOUSES LIKE 'CAVIDA%';`
 
 ---
 
-## Fluxo da Demo
+## Storytelling: O Fio Condutor
 
-| ACT | Duração | Onde executar | O que mostrar |
-|-----|---------|--------------|---------------|
-| 1 - Platform | 25 min | **Notebook** (células 2-13) | Warehouses, Clone, Time Travel, dbt |
-| 2 - Governance | 20 min | **Notebook** (células 14-27) | Tags, EU, Masking, RLS |
-| 3 - Streamlit | 25 min | **Streamlit App** | 16 passos SLV II ao vivo |
-| 4 - FinOps | 10 min | **Notebook** (células 30-32) | Monitors, custos, auto-suspend |
-| 5 - Intelligence | 10 min | **Snowflake Intelligence** | NLQ em português |
+> "Imaginem que já fizemos a migração do SAS 9.4. Estou a mostrar-vos o resultado — um projecto real, versionado em Git, com pipelines declarativos, governação nativa e uma aplicação web que substitui os vossos 16 passos manuais. Tudo dentro de Snowflake, sem ferramentas externas."
+
+---
+
+## Fluxo Completo
+
+| ACT | Duração | Onde | Tema |
+|-----|---------|------|------|
+| 1 - Platform | 25 min | Notebook + Snowsight | Infra, Git, dbt, Time Travel, Clone |
+| 2 - Governance | 20 min | Notebook | Tags, EU, Masking, RLS |
+| 3 - Streamlit | 25 min | Streamlit App | 16 passos SLV II |
+| 4 - FinOps | 10 min | Notebook | Monitors, custos, auto-suspend |
+| 5 - Intelligence | 10 min | Snowflake Intelligence | NLQ em português |
 
 ---
 
 ## ACT 1: Platform Foundation (25 min)
 
-### 1.1 — Arquitectura Multi-Ambiente (5 min)
-**💬 Mensagem**: "Já migrámos o vosso processo SAS para Snowflake. Separação total de compute e storage."
+### 1.1 — Git Integration & Version Control (5 min)
 
-**No Notebook**: Executar células de SHOW WAREHOUSES e SHOW SCHEMAS
+**💬 Storytelling**: "Todo o código deste projecto — pipelines, app, scripts — vive num repositório Git. O Snowflake sincroniza-se directamente com o GitHub. Cada alteração é rastreável, cada versão é recuperável. Isto é change management real."
+
+**Acções**:
+1. Abrir GitHub: https://github.com/dtinocosnow/cavida-snowflake
+   - Mostrar estrutura: `cavida_dbt/`, `streamlit_slv2/`, `notebooks/`, scripts
+   - Mostrar último commit com hash e timestamp
+2. No Snowsight: navegar a CAVIDA_DEMO → REGULATORY → Git Repositories → `CAVIDA_REPO`
+   - Mostrar que Snowflake tem clone completo do repo
+   - Mostrar branch `main` sincronizada
+3. No Notebook: executar query de verificação
 
 **Pontos-chave**:
-- 4 warehouses (XS/XS/S/M) para diferentes workloads
-- Escalar em 2 segundos (ALTER WAREHOUSE SET SIZE)
-- **vs Databricks**: Clusters always-on = custo mesmo inactivos
-- **vs BigQuery**: Sem controlo granular de compute por equipa
+- Código versionado = auditoria completa (quem, quando, o quê)
+- Branch strategy: `main` = produção, feature branches para dev
+- Promotion controlada: PR → code review → merge → FETCH no Snowflake
+- Rollback instantâneo: revert de commit = voltar a qualquer versão
 
-### 1.2 — Zero-Copy Clone (5 min)
-**💬 Mensagem**: "Precisam de ambiente de teste? Instantâneo. Zero bytes extra."
+**💬 Frase killer**: "No SAS, o código vive em metadata servers opacos. Aqui, está no Git — universal, auditável, colaborativo."
+
+---
+
+### 1.2 — Arquitectura Multi-Ambiente (5 min)
+
+**💬 Storytelling**: "Cada equipa tem o seu próprio compute. Se o pipeline ETL escalar para processar mais dados, não afecta a produção nem os analistas. E escalar leva 2 segundos."
+
+**No Notebook**: Executar células SHOW WAREHOUSES + SHOW SCHEMAS + ALTER WAREHOUSE
+
+**Pontos-chave**:
+- 4 warehouses isolados (DEV XS, TEST XS, PROD S, ETL M)
+- Escalar/reduzir em 2 segundos
+- Auto-suspend: custo ZERO quando inactivo
+
+---
+
+### 1.3 — Zero-Copy Clone (3 min)
+
+**💬 Storytelling**: "Precisam de um ambiente de teste com os mesmos dados de produção? No SAS copiam terabytes durante horas. Aqui, é instantâneo e ocupa zero bytes adicionais."
 
 **No Notebook**: Executar CREATE SCHEMA TEST CLONE PROD
 
 **Pontos-chave**:
-- < 1 segundo para clonar qualquer volume de dados
-- **vs Databricks**: Delta Clone requer compute, leva minutos
-- **vs BigQuery**: NÃO EXISTE equivalente
+- < 1 segundo independentemente do volume
+- 0 bytes extra até divergir
+- Perfeito para QA, UAT, sandbox de desenvolvimento
 
-### 1.3 — Time Travel (5 min)
-**💬 Mensagem**: "Se alguém apagar dados? Recuperamos em segundos. Sem backup."
+---
 
-**No Notebook**: Executar DELETE → AT(OFFSET) → INSERT restore
+### 1.4 — Time Travel (5 min)
+
+**💬 Storytelling**: "Alguém apagou dados por engano numa sexta-feira à noite? No SAS, restauram backup no fim-de-semana. Aqui, recuperamos em 3 segundos — até 90 dias de histórico automático."
+
+**No Notebook**: Executar sequência DELETE → AT(OFFSET) → INSERT restore
 
 **Pontos-chave**:
 - 90 dias automáticos (Business Critical)
-- UNDROP para recuperar objectos eliminados
-- **vs Databricks**: Delta versioning = gestão manual, VACUUM
-- **vs BigQuery**: Apenas 7 dias, sem UNDROP
+- UNDROP para tabelas, schemas, bases de dados inteiras
+- Zero configuração, zero gestão
 
-### 1.4 — dbt Project (10 min)
-**💬 Mensagem**: "Pipeline versionado, deployed como objecto Snowflake. Tudo auditável."
+---
+
+### 1.5 — dbt Project: Pipeline como Código (7 min)
+
+**💬 Storytelling**: "Este pipeline substitui centenas de programas SAS. Está deployado como objecto Snowflake nativo, com dependências declarativas e resultados auditáveis. E vive no mesmo Git que acabámos de ver."
 
 **Acções**:
-1. No Notebook: mostrar objectos criados (célula SELECT de DEV_STAGING/DEV_PROD)
-2. Navegar no Snowsight: CAVIDA_DEMO → REGULATORY → dbt Projects → `CAVIDA_SLV2_PROJECT`
-3. Mostrar DAG (grafo de dependências): staging → intermediate → marts
-4. Mostrar que 10/10 modelos passaram
+1. No Notebook: mostrar objectos criados (10 modelos)
+2. No Snowsight: CAVIDA_DEMO → REGULATORY → dbt Projects → `CAVIDA_SLV2_PROJECT`
+   - Mostrar DAG visual (staging → intermediate → marts)
+   - Mostrar execution history: 10/10 PASS
+3. Ligar ao Git: "Este dbt project é o mesmo código que viram no GitHub em `cavida_dbt/`"
 
 **Pontos-chave**:
-- dbt deployed nativamente no Snowflake (objectos geridos)
-- **vs Databricks**: Não tem dbt deploy nativo (requer Jobs API externo)
-- **vs BigQuery**: Não tem dbt como objecto nativo (requer Cloud Composer)
+- Pipeline declarativo vs. procedural (SAS)
+- Linhagem automática (DAG)
+- Testes integrados
+- Deployed nativamente no Snowflake (não requer servidor externo)
+
+**💬 Frase killer**: "No Databricks não existe dbt deploy nativo. No BigQuery também não. Só no Snowflake o dbt vive como objecto gerido."
 
 ---
 
 ## ACT 2: Governance & Security (20 min)
 
-### 2.1 — Catálogo & Tags (5 min)
-**💬 Mensagem**: "Todos os dados classificados. Zero licenças adicionais."
+### 2.1 — Catálogo, Tags & Camada Semântica (5 min)
+
+**💬 Storytelling**: "Cada tabela está classificada por domínio e sensibilidade. E a Semantic View funciona como glossário de negócio — as vossas métricas definidas centralmente, em português."
 
 **No Notebook**: Executar SHOW TAGS + SHOW SEMANTIC DIMENSIONS/METRICS
 
 **Pontos-chave**:
-- Tags: DATA_DOMAIN, SENSITIVITY, PII
-- Semantic View como glossário de negócio (descrições em PT!)
-- **vs SAS**: Information Catalog = licença extra
-- **vs Databricks**: Unity Catalog tags (mais recente, menos maduro)
+- Tags: DATA_DOMAIN, SENSITIVITY, PII — propagam automaticamente
+- Semantic View = definição única de métricas consumida por Intelligence, APIs, BI
+- Zero licenças adicionais (no SAS = Information Catalog extra)
 
-### 2.2 — EU Data Residency (3 min)
-**💬 Mensagem**: "Dados NUNCA saem da UE. Frankfurt, Business Critical."
+---
+
+### 2.2 — EU Data Residency (2 min)
+
+**💬 Storytelling**: "Os dados da CA Vida nunca saem da UE. Frankfurt, Business Critical, encriptação AES-256. Conformidade RGPD total."
 
 **No Notebook**: Executar SELECT CURRENT_REGION()
 
-**Pontos-chave**:
-- AWS EU-Central-1 (Frankfurt)
-- AES-256 + Tri-Secret Secure
-- SOC2, ISO27001, GDPR
+---
 
-### 2.3 — Dynamic Masking (5 min)
-**💬 Mensagem**: "Dados sensíveis mascarados automaticamente. Sem código."
+### 2.3 — Dynamic Data Masking (5 min)
+
+**💬 Storytelling**: "O actuário vê todos os dados. O analista vê dados mascarados. Não há código para manter — é uma política declarativa aplicada em TODAS as queries automaticamente."
 
 **No Notebook**: Executar query como ACCOUNTADMIN → depois como CAVIDA_ANALYST
 
 **Pontos-chave**:
-- ACCOUNTADMIN vê dados reais
-- ANALYST vê `***MASKED***`
-- Política declarativa, aplicada em TODAS as queries
-- **vs Databricks**: Row/column filters Unity Catalog (menos flexível)
-- **vs BigQuery**: Policy tags apenas column-level
+- Masking baseado em role (zero código)
+- Aplica-se em todas as queries, views, exports — impossível contornar
+- No SAS: WHERE clauses manuais em cada programa
+
+---
 
 ### 2.4 — Row-Level Security (5 min)
-**💬 Mensagem**: "O analista só vê últimos 6 meses. Invisível."
+
+**💬 Storytelling**: "O analista só vê dados dos últimos 6 meses. Não recebe erro — simplesmente não vê os dados históricos. Segurança invisível."
 
 **No Notebook**: Executar GROUP BY reference_date como ADMIN → depois como ANALYST
 
 **Pontos-chave**:
-- ANALYST não vê erro — simplesmente vê menos linhas
-- Segurança por data de referência (últimos 6 meses)
-- **vs SAS**: WHERE clauses manuais em cada programa
-- **vs Databricks**: Row filters menos maduros
+- Filtro por data de referência (últimos 6 meses para analistas)
+- Invisível para o utilizador
+- Data minimisation (RGPD compliance)
 
-### 2.5 — Lineage (2 min)
-**💬 Mensagem**: "Linhagem completa, da origem ao report."
+---
 
-**No Snowsight**: Abrir dbt project → mostrar grafo
-- stg_investment_portfolio → int_asset_reconciliation → mart_economic_balance_sheet
+### 2.5 — Lineage (3 min)
+
+**💬 Storytelling**: "De onde vêm estes dados? Quem os transformou? O grafo do dbt dá-vos linhagem completa — da origem ao report final."
+
+**No Snowsight**: Abrir dbt project → mostrar grafo visual
+- `stg_investment_portfolio` → `int_asset_reconciliation` → `mart_economic_balance_sheet`
 
 ---
 
 ## ACT 3: Workflow Solvency II — Streamlit (25 min)
 
-**💬 Mensagem**: "O processo SLV II tal como o conhecem — mas dentro de Snowflake."
+**💬 Storytelling de abertura**: "Tudo o que viram até agora é infra-estrutura. Agora vamos ver o resultado para o utilizador final — o vosso processo SLV II de 16 passos, replicado como aplicação web nativa no Snowflake. Sem servidores adicionais, sem licenças de SAS Visual Analytics."
 
 ### Abrir: Streamlit App `SLV2_WORKFLOW`
 
-| Passo | Nome | O que mostrar | Tempo |
-|-------|------|---------------|-------|
-| 1 | Período de Referência | Write-back (UPDATE directo!) | 2 min |
-| 2 | Importação Carteira | Upload ficheiro + histórico | 2 min |
-| 3 | Estado CA Gestl | Status colorido + barra progresso | 1 min |
-| 4 | Regras de Validação | Executar 10 regras, ver Aprovado/Falhou | 3 min |
-| 5 | Reconciliação Activos | Totais por classe + export Excel | 2 min |
-| 6-8 | Risk Agility | Registos vazios, ficheiros, passivos | 3 min |
-| 9-11 | Download/Import RA | Ficheiros + status | 2 min |
-| 12 | Tagetik | Pré-requisitos + carregamento | 2 min |
-| 13 | Capital Disponível | Métricas por Tier (M€) | 2 min |
-| 14 | Balanço Económico | Variações + delta indicator | 2 min |
-| 15 | Fecho Report | Botão de fecho | 1 min |
-| 16 | Download Tagetik | Ficheiros finais | 1 min |
+**Percorrer cada passo com narrativa**:
 
-**Ponto-chave final**: "16 passos, tudo dentro de Snowflake. Zero infra externa."
-- **vs SAS**: SAS Visual Analytics = licença extra, servidores dedicados
-- **vs Databricks**: NÃO TEM framework de web apps nativo
-- **vs BigQuery**: NÃO TEM framework de web apps nativo
+| Passo | Storytelling |
+|-------|-------------|
+| 1 - Período Referência | "O actuário actualiza o período directamente na app — write-back instantâneo sem exports." |
+| 2 - Importação Carteira | "Upload do ficheiro Excel directamente na interface. Sem SFTP, sem processos batch." |
+| 3 - Estado CA Gestl | "Visibilidade em tempo real do carregamento — status colorido, barra de progresso." |
+| 4 - Regras Validação | "10 regras executam automaticamente. No SAS era verificação manual." |
+| 5 - Reconciliação | "Totais por classe de activo com export para Excel integrado." |
+| 6-8 - Risk Agility | "Reconciliação de activos e passivos, registos vazios por ficheiro." |
+| 9-11 - Download/Import | "Gestão de ficheiros Risk Agility — download, import, estado." |
+| 12 - Tagetik | "Carregamento com pré-requisitos validados automaticamente." |
+| 13 - Capital | "Capital disponível por tier — métricas em M€." |
+| 14 - Balanço | "Balanço económico com variações e delta indicator." |
+| 15 - Fecho | "Um botão fecha o report. Sem batch jobs, sem esperar." |
+| 16 - Download | "Ficheiros finais para Tagetik disponíveis imediatamente." |
+
+**💬 Frase killer de fecho**: "16 passos, tudo dentro de Snowflake. Zero infra externa. No Databricks e BigQuery isto simplesmente não existe."
 
 ---
 
 ## ACT 4: FinOps & Cost Intelligence (10 min)
 
-**💬 Mensagem**: "Controlo total de custos. Impossível no SAS."
+**💬 Storytelling**: "Quanto custa correr tudo isto? Ao contrário do SAS com licença fixa anual sem visibilidade — aqui sabemos exactamente quanto custa cada equipa, cada query. E quando ninguém usa, o custo é literalmente zero."
 
-### No Notebook: Executar células 30-32
-
-| Demo | O que mostrar |
-|------|---------------|
-| Resource Monitors | 3 monitors (DEV 100cr, ETL 300cr, PROD 500cr) |
-| Cost Attribution | Custos por warehouse em EUR |
-| Auto-Suspend | Warehouses SUSPENDED = 0€/hora |
+**No Notebook**: Executar células Resource Monitors + Cost by Warehouse
 
 **Pontos-chave**:
-- Pay-per-second com limites automáticos
-- Custo noite/fim-de-semana = ZERO
-- **vs SAS**: Licença fixa anual, sem visibilidade de consumo
-- **vs Databricks**: DBU caro, clusters always-on por defeito
-- **vs BigQuery**: Pay-per-query mas sem resource monitors
+- 3 Resource Monitors com alertas automáticos (50%, 80%, 95%)
+- Custo por warehouse = atribuição exacta por equipa
+- Auto-suspend (60s/120s): noite e fim-de-semana = 0€
+- Estimativa: 40-60% menos que licença SAS equivalente
 
 ---
 
 ## ACT 5: WOW Factor — Snowflake Intelligence (10 min)
 
-**💬 Mensagem**: "E agora, o futuro: perguntar aos dados em PORTUGUÊS."
+**💬 Storytelling**: "E agora, o futuro. Imaginem que qualquer pessoa da CA Vida — actuário, gestor, compliance — pode simplesmente PERGUNTAR aos dados em português. Sem saber SQL. Sem pedir relatórios. Vejam."
 
 ### Abrir: Snowflake Intelligence → Agent `CA Vida - Solvency II Intelligence`
 
-**Perguntas a fazer (ao vivo!)**:
+**Demo ao vivo (4 perguntas)**:
 1. "Qual é o valor total da carteira de investimentos?"
+   - *Mostrar SQL gerado, resultado formatado*
 2. "Mostra o balanço económico por tipo de activo"
+   - *Mostrar tabela + visualização automática*
 3. "Qual é o capital disponível por tier?"
+   - *Mostrar breakdown Tier 1/2/3*
 4. "Quantos instrumentos temos por classe de activo?"
+   - *Mostrar gráfico gerado automaticamente*
 
-**Para cada pergunta mostrar**:
-- SQL gerado automaticamente
-- Resultado formatado
-- Visualização (chart) gerada
-
-**Ponto-chave KILLER**: "Isto NÃO EXISTE no SAS. NÃO EXISTE no Databricks. NÃO EXISTE no BigQuery. É EXCLUSIVO Snowflake."
+**💬 Frase killer**: "Isto é EXCLUSIVO Snowflake. Não existe no SAS. Não existe no Databricks nativamente. Não existe no BigQuery. É a vossa equipa de business intelligence — disponível 24/7, em português."
 
 ---
 
 ## Encerramento (5 min)
 
 ### Resumo (mostrar última célula do Notebook)
-- 20/20 requisitos demonstrados ✅
-- Substituição completa do SAS 9.4
-- Sem licenças adicionais para governance, data quality, ou AI
+
+**💬 Storytelling de fecho**: "Acabámos de ver, em 90 minutos, a substituição completa do SAS 9.4: pipelines, aplicação web, governação, segurança, controlo de custos, e inteligência artificial — tudo nativo, tudo numa única plataforma, tudo na UE."
+
+- ✅ 20/20 requisitos RFI demonstrados
+- ✅ Substituição completa do SAS 9.4
+- ✅ Zero licenças adicionais para governance, quality, ou AI
+- ✅ Código no Git, auditável, versionado
+- ✅ EU data residency (Frankfurt, Business Critical)
 
 ### Call-to-Action
+
 | # | Acção | Prazo |
 |---|-------|-------|
 | 1 | Workshop hands-on com equipa técnica | 2 semanas |
@@ -218,36 +259,40 @@
 | 4 | Plano de migração completo | 8-12 semanas |
 
 ### Entregável
-- Relatório detalhado: `RELATORIO_DEMONSTRACAO_CA_VIDA.md` (enviado após sessão)
-
----
-
-## Notas para o Presenter — Perguntas Difíceis
-
-| Pergunta do Cliente | Resposta |
-|---------------------|----------|
-| "E se o warehouse ficar lento?" | "Escalam em 2 seg: ALTER WAREHOUSE SET SIZE = LARGE. Sem reiniciar nada." |
-| "Como fazem backup?" | "Time Travel 90 dias + Fail-Safe 7 dias + Replication cross-region para DR." |
-| "Quanto custa?" | "Pay-per-use. Estimativa no sizing document. Sem licenças fixas." |
-| "E a migração SAS?" | "dbt converte lógica SAS para SQL. Existem ferramentas automáticas (SnowConvert)." |
-| "Quem mais usa no sector segurador?" | "Generali, AXA, Zurich, Legal&General — todos em produção." |
-| "E o Databricks?" | "Sem Streamlit, sem NLQ, sem masking declarativo, sem time-travel 90d, clusters caros." |
-| "E o BigQuery?" | "Sem apps web, sem dbt deploy, time-travel 7d, sem zero-copy clone." |
-| "A migração demora quanto?" | "Pipeline piloto: 6-8 semanas. Full migration: 6-12 meses dependendo de complexidade." |
-| "E se quisermos on-prem?" | "Snowflake é 100% cloud mas com Private Link (VPN), dados nunca expostos à internet." |
+- Relatório detalhado enviado após sessão: `RELATORIO_DEMONSTRACAO_CA_VIDA.md`
+- Repositório Git com todo o código: https://github.com/dtinocosnow/cavida-snowflake
 
 ---
 
 ## Objectos Snowflake da Demo
 
-| Tipo | Objecto | Onde usar |
-|------|---------|-----------|
-| Notebook | `CAVIDA_DEMO.REGULATORY.CAVIDA_DEMO_V2_EXECUCAO` | ACT 1, 2, 4 |
-| Streamlit | `CAVIDA_DEMO.REGULATORY.SLV2_WORKFLOW` | ACT 3 |
-| Agent | `CAVIDA_DEMO.SEMANTIC.SLV2_INTELLIGENCE_AGENT` | ACT 5 |
-| dbt Project | `CAVIDA_DEMO.REGULATORY.CAVIDA_SLV2_PROJECT` | ACT 1.4 |
-| Semantic View | `CAVIDA_DEMO.SEMANTIC.SLV2_ANALYTICS` | ACT 2.1, 5 |
+| Tipo | Objecto | ACT |
+|------|---------|-----|
+| Git Repository | `CAVIDA_DEMO.REGULATORY.CAVIDA_REPO` | 1.1 |
+| Notebook | `CAVIDA_DEMO.REGULATORY.CAVIDA_DEMO_V2_EXECUCAO` | 1-4 |
+| dbt Project | `CAVIDA_DEMO.REGULATORY.CAVIDA_SLV2_PROJECT` | 1.5 |
+| Streamlit | `CAVIDA_DEMO.REGULATORY.SLV2_WORKFLOW` | 3 |
+| Semantic View | `CAVIDA_DEMO.SEMANTIC.SLV2_ANALYTICS` | 2.1, 5 |
+| Cortex Agent | `CAVIDA_DEMO.SEMANTIC.SLV2_INTELLIGENCE_AGENT` | 5 |
+| API Integration | `CAVIDA_GIT_INTEGRATION` | 1.1 |
 
 ---
 
-*Tempo total: 90 minutos | Margem: 5 min Q&A entre secções*
+## Perguntas Difíceis — Respostas Preparadas
+
+| Pergunta | Resposta |
+|----------|----------|
+| "E se o warehouse ficar lento?" | "ALTER WAREHOUSE SET SIZE = LARGE — 2 segundos, sem reiniciar." |
+| "Como fazem backup?" | "Time Travel 90d + Fail-Safe 7d + Replication cross-region." |
+| "Quanto custa?" | "Pay-per-use. Estimativa no sizing. Sem licenças fixas." |
+| "E a migração SAS?" | "dbt + SnowConvert. Pipeline piloto em 6-8 semanas." |
+| "Quem mais usa no sector?" | "Generali, AXA, Zurich, Legal&General — todos em produção." |
+| "E o Databricks?" | "Sem Streamlit, sem NLQ, sem dbt nativo, sem clone instantâneo, clusters caros." |
+| "E o BigQuery?" | "Sem apps web, sem dbt deploy, 7d time travel, sem clone, sem Intelligence." |
+| "A migração demora?" | "Pipeline piloto: 6-8 sem. Full: 6-12 meses conforme complexidade." |
+| "E controlo de versões?" | "Git nativo — repo sincronizado no Snowflake. Mesmo que viram." |
+| "Podemos testar?" | "Trial account grátis 30 dias. PoC em 4-6 semanas com dados reais." |
+
+---
+
+*Tempo total: 90 minutos | Executar notebook célula-a-célula + Streamlit + Intelligence*
