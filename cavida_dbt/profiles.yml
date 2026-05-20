@@ -8,5 +8,5 @@ cavida_dbt:
       role: ACCOUNTADMIN
       database: CAVIDA_DEMO
       warehouse: CAVIDA_ETL_WH
-      schema: DEV
+      schema: SILVER
       threads: 4
