@@ -1,0 +1,12 @@
+cavida_dbt:
+  target: dev
+  outputs:
+    dev:
+      type: snowflake
+      account: SFSEEUROPE-DTINOCO_AWS
+      user: DTINOCO
+      role: ACCOUNTADMIN
+      database: CAVIDA_DEMO
+      warehouse: CAVIDA_ETL_WH
+      schema: DEV
+      threads: 4

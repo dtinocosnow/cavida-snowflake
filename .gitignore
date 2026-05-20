@@ -1,0 +1,14 @@
+# Ignore dbt artifacts
+cavida_dbt/target/
+cavida_dbt/logs/
+cavida_dbt/.user.yml
+
+# Python
+__pycache__/
+*.pyc
+
+# Snowflake CLI
+.snowflake/
+
+# OS
+.DS_Store

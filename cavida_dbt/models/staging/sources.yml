@@ -1,0 +1,16 @@
+version: 2
+
+sources:
+  - name: raw
+    database: CAVIDA_DEMO
+    schema: RAW
+    tables:
+      - name: SLV2_INVESTMENT_PORTFOLIO
+      - name: SLV2_RISK_AGILITY_INPUTS_ASSETS
+      - name: SLV2_RISK_AGILITY_INPUTS_LIABILITIES
+      - name: SLV2_TAGETIK_PROCESSES
+      - name: SLV2_REFERENCE_PERIODS
+      - name: SLV2_CA_GESTL_FILES
+      - name: SLV2_VALIDATION_RULES
+      - name: SLV2_RISK_AGILITY_PROCESSES
+      - name: SLV2_RISK_AGILITY_FILES

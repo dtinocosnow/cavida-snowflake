@@ -1,0 +1,27 @@
+name: 'cavida_dbt'
+version: '1.0.0'
+config-version: 2
+
+profile: 'cavida_dbt'
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  cavida_dbt:
+    staging:
+      +schema: STAGING
+      +materialized: view
+    intermediate:
+      +schema: STAGING
+      +materialized: view
+    marts:
+      +schema: PROD
+      +materialized: table
